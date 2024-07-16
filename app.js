@@ -1,25 +1,29 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
+const cors = require('cors');
 const app = express();
-const port = 3000;
+const port = 5000;
 
-const db = new sqlite3.Database('db.sqlite');
+app.use(cors({ origin: 'http://localhost:3000' })); //cors connection in frontend
 
-db.serialize(() => {
+const db = new sqlite3.Database('db.sqlite'); // Create SQLite database
+
+db.serialize(() => { //queries within are executed
     db.run('CREATE TABLE IF NOT EXISTS Channel (id INTEGER PRIMARY KEY, name TEXT, count INTEGER, prefix TEXT)');
 
 });
-app.use(bodyParser.json()); //middleware to parse JSON request bod
+app.use(bodyParser.json()); //middleware to parse JSON request 
 
-app.get('/channel', (req, res) => {
+app.get('/channel', (req, res) => { // get all data 
     db.serialize(() => {
         db.all('SELECT * FROM Channel', [], (err, rows) => {
             res.json(rows);
         });
     })
 })
-app.post('/channel/create', (req, res) => {
+
+app.post('/channel/create', (req, res) => { // create data 
     const { name, count, prefix } = req.body;
     db.serialize(() => {
         console.log(name, count, prefix);
@@ -29,7 +33,7 @@ app.post('/channel/create', (req, res) => {
         res.json('successful'); 
     })
 })
-app.put('/channel/update/:id', (req, res) => {
+app.put('/channel/update/:id', (req, res) => { // update data 
      const { name, count, prefix } = req.body;
      const { id } = req.params;
      db.serialize(() => {
@@ -39,7 +43,7 @@ app.put('/channel/update/:id', (req, res) => {
          res.json('successful updated');
      })
  })
- app.delete('/channel/delete/:id', (req, res) => {
+ app.delete('/channel/delete/:id', (req, res) => { // delete data 
      const { id } = req.params;
      db.serialize(() => {
          const stmt = db.prepare('DELETE FROM Channel WHERE id = ?');
